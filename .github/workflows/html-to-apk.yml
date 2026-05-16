@@ -1,0 +1,385 @@
+name: Transformar HTML em APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: "Nome do aplicativo"
+        required: false
+        default: "Central Player"
+      html_path:
+        description: "Caminho do HTML se houver mais de um. Pode deixar vazio."
+        required: false
+        default: ""
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_NAME: ${{ github.event.inputs.app_name || 'Central Player' }}
+      HTML_PATH_INPUT: ${{ github.event.inputs.html_path || '' }}
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: Instalar ferramentas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+
+      - name: Instalar SDK Android
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Encontrar HTML
+        run: |
+          set -e
+
+          echo "Arquivos no repositório:"
+          find . -maxdepth 4 -type f | sort
+
+          rm -rf extraido
+          mkdir -p extraido
+
+          ZIP_COUNT=$(find . -type f -iname "*.zip" -not -path "*/.git/*" | wc -l)
+
+          if [ "$ZIP_COUNT" -gt 0 ]; then
+            echo "Extraindo ZIPs encontrados..."
+            i=0
+            while IFS= read -r ZIP_FILE; do
+              i=$((i+1))
+              mkdir -p "extraido/zip_$i"
+              unzip -oq "$ZIP_FILE" -d "extraido/zip_$i"
+            done < <(find . -type f -iname "*.zip" -not -path "*/.git/*")
+          fi
+
+          if [ -n "$HTML_PATH_INPUT" ]; then
+            if [ -f "$HTML_PATH_INPUT" ]; then
+              HTML_FILE="$HTML_PATH_INPUT"
+            elif [ -f "extraido/$HTML_PATH_INPUT" ]; then
+              HTML_FILE="extraido/$HTML_PATH_INPUT"
+            else
+              echo "ERRO: html_path informado não encontrado: $HTML_PATH_INPUT"
+              echo "HTMLs encontrados:"
+              find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) -not -path "*/.git/*" || true
+              exit 1
+            fi
+          else
+            HTML_FILE=$(find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) \
+              -not -path "*/.git/*" \
+              | sort \
+              | grep -Ei "(mobile|central|player|ficha|index).*\.html?$" \
+              | head -n 1 || true)
+
+            if [ -z "$HTML_FILE" ]; then
+              HTML_FILE=$(find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) \
+                -not -path "*/.git/*" \
+                | sort \
+                | head -n 1 || true)
+            fi
+          fi
+
+          if [ -z "$HTML_FILE" ] || [ ! -f "$HTML_FILE" ]; then
+            echo "ERRO: Nenhum HTML encontrado."
+            echo "Envie um arquivo .html ou um .zip contendo o HTML."
+            exit 1
+          fi
+
+          echo "HTML encontrado: $HTML_FILE"
+          echo "HTML_FILE=$HTML_FILE" >> "$GITHUB_ENV"
+
+      - name: Criar projeto Android WebView
+        run: |
+          set -e
+
+          rm -rf android_build
+          mkdir -p android_build/app/src/main/java/com/orueu/htmlapk
+          mkdir -p android_build/app/src/main/assets
+          mkdir -p android_build/app/src/main/res/drawable
+          mkdir -p android_build/app/src/main/res/values
+
+          HTML_DIR=$(dirname "$HTML_FILE")
+
+          cp -R "$HTML_DIR"/. android_build/app/src/main/assets/
+          cp "$HTML_FILE" android_build/app/src/main/assets/index.html
+
+          cat > android_build/settings.gradle <<'EOF'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "HtmlToApk"
+include ":app"
+EOF
+
+          cat > android_build/build.gradle <<'EOF'
+plugins {
+    id "com.android.application" version "8.7.3" apply false
+}
+EOF
+
+          cat > android_build/app/build.gradle <<'EOF'
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.orueu.htmlapk"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.orueu.htmlapk"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+    }
+}
+EOF
+
+          cat > android_build/app/src/main/res/values/strings.xml <<EOF
+<resources>
+    <string name="app_name">$APP_NAME</string>
+</resources>
+EOF
+
+          cat > android_build/app/src/main/res/values/colors.xml <<'EOF'
+<resources>
+    <color name="black">#050202</color>
+</resources>
+EOF
+
+          cat > android_build/app/src/main/res/values/styles.xml <<'EOF'
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#050202</item>
+        <item name="android:navigationBarColor">#050202</item>
+    </style>
+</resources>
+EOF
+
+          cat > android_build/app/src/main/res/drawable/ic_launcher.xml <<'EOF'
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#050202" android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#690912" android:pathData="M18,18h72v72h-72z"/>
+    <path android:fillColor="#e43642" android:pathData="M54,16 L88,54 L54,92 L20,54 Z"/>
+    <path android:fillColor="#050202" android:pathData="M54,30 L74,54 L54,78 L34,54 Z"/>
+    <path android:fillColor="#d8a549" android:pathData="M51,42h6v24h-6z"/>
+    <path android:fillColor="#d8a549" android:pathData="M42,51h24v6h-24z"/>
+</vector>
+EOF
+
+          cat > android_build/app/src/main/AndroidManifest.xml <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:theme="@style/AppTheme"
+        android:label="@string/app_name"
+        android:icon="@drawable/ic_launcher"
+        android:usesCleartextTraffic="true"
+        android:resizeableActivity="true"
+        android:allowBackup="true"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+    </application>
+</manifest>
+EOF
+
+          cat > android_build/app/src/main/java/com/orueu/htmlapk/MainActivity.java <<'EOF'
+package com.orueu.htmlapk;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.content.Intent;
+import android.net.Uri;
+import android.webkit.WebView;
+import android.webkit.WebSettings;
+import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.view.Window;
+
+public class MainActivity extends Activity {
+    private WebView webView;
+    private ValueCallback<Uri[]> filePathCallback;
+    private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setStatusBarColor(android.graphics.Color.parseColor("#050202"));
+        getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#050202"));
+
+        webView = new WebView(this);
+        webView.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setBuiltInZoomControls(false);
+        settings.setDisplayZoomControls(false);
+        settings.setSupportZoom(false);
+        settings.setTextZoom(100);
+        settings.setUseWideViewPort(false);
+        settings.setLoadWithOverviewMode(false);
+
+        webView.setVerticalScrollBarEnabled(true);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
+
+        webView.setWebViewClient(new WebViewClient());
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(
+                    WebView webView,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams
+            ) {
+                if (MainActivity.this.filePathCallback != null) {
+                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                }
+
+                MainActivity.this.filePathCallback = filePathCallback;
+
+                Intent intent = fileChooserParams.createIntent();
+
+                try {
+                    startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
+                } catch (Exception e) {
+                    MainActivity.this.filePathCallback = null;
+                    return false;
+                }
+
+                return true;
+            }
+        });
+
+        setContentView(webView);
+        webView.loadUrl("file:///android_asset/index.html");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+            if (filePathCallback == null) {
+                super.onActivityResult(requestCode, resultCode, data);
+                return;
+            }
+
+            Uri[] results = null;
+
+            if (resultCode == RESULT_OK && data != null) {
+                Uri dataUri = data.getData();
+                if (dataUri != null) {
+                    results = new Uri[]{dataUri};
+                }
+            }
+
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
+            return;
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+}
+EOF
+
+      - name: Gerar APK
+        run: |
+          cd android_build
+          gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Encontrar APK
+        run: |
+          APK_PATH=$(find android_build/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+
+          if [ -z "$APK_PATH" ]; then
+            echo "ERRO: APK não encontrado."
+            find android_build -path "*/build/outputs/*" -type f || true
+            exit 1
+          fi
+
+          cp "$APK_PATH" central-player-debug.apk
+
+      - name: Enviar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: central-player-apk
+          path: central-player-debug.apk
