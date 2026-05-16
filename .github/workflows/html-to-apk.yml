@@ -101,180 +101,257 @@ jobs:
           echo "HTML encontrado: $HTML_FILE"
           echo "HTML_FILE=$HTML_FILE" >> "$GITHUB_ENV"
 
-      - name: Criar projeto Android WebView
+            - name: Criar projeto Android WebView
         run: |
-          python3 -c 'from pathlib import Path
+          python3 <<'PY'
+          from pathlib import Path
           from xml.sax.saxutils import escape
-          import os, shutil, textwrap
+          import os
+          import shutil
+
           app_name = os.environ.get("APP_NAME", "Central Player")
           html_file = Path(os.environ["HTML_FILE"]).resolve()
-          html_dir = html_file.parent
+
           root = Path("android_build")
           if root.exists():
               shutil.rmtree(root)
+
           java_dir = root / "app/src/main/java/com/orueu/htmlapk"
           assets_dir = root / "app/src/main/assets"
           values_dir = root / "app/src/main/res/values"
           drawable_dir = root / "app/src/main/res/drawable"
-          for p in [java_dir, assets_dir, values_dir, drawable_dir]:
-              p.mkdir(parents=True, exist_ok=True)
-          for item in html_dir.iterdir():
-              dest = assets_dir / item.name
-              if item.is_dir():
-                  if dest.exists():
-                      shutil.rmtree(dest)
-                  shutil.copytree(item, dest)
-              else:
-                  shutil.copy2(item, dest)
+
+          java_dir.mkdir(parents=True, exist_ok=True)
+          assets_dir.mkdir(parents=True, exist_ok=True)
+          values_dir.mkdir(parents=True, exist_ok=True)
+          drawable_dir.mkdir(parents=True, exist_ok=True)
+
+          # Copia SOMENTE o HTML principal.
+          # Isso evita o loop infinito copiando android_build dentro dele mesmo.
           shutil.copy2(html_file, assets_dir / "index.html")
-          (root / "settings.gradle").write_text(textwrap.dedent("""
-              pluginManagement {
-                  repositories {
-                      google()
-                      mavenCentral()
-                      gradlePluginPortal()
-                  }
+
+          (root / "settings.gradle").write_text("""pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
               }
-              dependencyResolutionManagement {
-                  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-                  repositories {
-                      google()
-                      mavenCentral()
-                  }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
               }
-              rootProject.name = "HtmlToApk"
-              include ":app"
-          """).strip() + "\n", encoding="utf-8")
-          (root / "build.gradle").write_text(textwrap.dedent("""
-              plugins {
-                  id "com.android.application" version "8.7.3" apply false
+          }
+
+          rootProject.name = "HtmlToApk"
+          include ":app"
+          """, encoding="utf-8")
+
+          (root / "build.gradle").write_text("""plugins {
+              id "com.android.application" version "8.7.3" apply false
+          }
+          """, encoding="utf-8")
+
+          (root / "app/build.gradle").write_text("""plugins {
+              id "com.android.application"
+          }
+
+          android {
+              namespace "com.orueu.htmlapk"
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId "com.orueu.htmlapk"
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName "1.0"
               }
-          """).strip() + "\n", encoding="utf-8")
-          (root / "app/build.gradle").write_text(textwrap.dedent("""
-              plugins {
-                  id "com.android.application"
-              }
-              android {
-                  namespace "com.orueu.htmlapk"
-                  compileSdk 35
-                  defaultConfig {
-                      applicationId "com.orueu.htmlapk"
-                      minSdk 23
-                      targetSdk 35
-                      versionCode 1
-                      versionName "1.0"
-                  }
-              }
-          """).strip() + "\n", encoding="utf-8")
-          (values_dir / "strings.xml").write_text(f"<resources>\n    <string name=\"app_name\">{escape(app_name)}</string>\n</resources>\n", encoding="utf-8")
-          (values_dir / "styles.xml").write_text(textwrap.dedent("""
-              <resources>
-                  <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
-                      <item name="android:windowNoTitle">true</item>
-                      <item name="android:windowActionBar">false</item>
-                      <item name="android:windowLightStatusBar">false</item>
-                      <item name="android:statusBarColor">#050202</item>
-                      <item name="android:navigationBarColor">#050202</item>
-                  </style>
-              </resources>
-          """).strip() + "\n", encoding="utf-8")
-          (drawable_dir / "ic_launcher.xml").write_text(textwrap.dedent("""
-              <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-                  <path android:fillColor="#050202" android:pathData="M0,0h108v108h-108z"/>
-                  <path android:fillColor="#690912" android:pathData="M18,18h72v72h-72z"/>
-                  <path android:fillColor="#e43642" android:pathData="M54,16 L88,54 L54,92 L20,54 Z"/>
-                  <path android:fillColor="#050202" android:pathData="M54,30 L74,54 L54,78 L34,54 Z"/>
-                  <path android:fillColor="#d8a549" android:pathData="M51,42h6v24h-6z"/>
-                  <path android:fillColor="#d8a549" android:pathData="M42,51h24v6h-24z"/>
-              </vector>
-          """).strip() + "\n", encoding="utf-8")
-          (root / "app/src/main/AndroidManifest.xml").write_text(textwrap.dedent("""
-              <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-                  <uses-permission android:name="android.permission.INTERNET" />
-                  <application android:theme="@style/AppTheme" android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:usesCleartextTraffic="true" android:resizeableActivity="true" android:allowBackup="true" android:supportsRtl="true">
-                      <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
-                          <intent-filter>
-                              <action android:name="android.intent.action.MAIN" />
-                              <category android:name="android.intent.category.LAUNCHER" />
-                          </intent-filter>
-                      </activity>
-                  </application>
-              </manifest>
-          """).strip() + "\n", encoding="utf-8")
-          (java_dir / "MainActivity.java").write_text(textwrap.dedent("""
-              package com.orueu.htmlapk;
-              import android.app.Activity;
-              import android.os.Bundle;
-              import android.content.Intent;
-              import android.net.Uri;
-              import android.webkit.WebView;
-              import android.webkit.WebSettings;
-              import android.webkit.WebViewClient;
-              import android.webkit.WebChromeClient;
-              import android.webkit.ValueCallback;
-              import android.webkit.WebChromeClient.FileChooserParams;
-              import android.view.ViewGroup;
-              import android.widget.FrameLayout;
-              import android.view.Window;
-              public class MainActivity extends Activity {
-                  private WebView webView;
-                  private ValueCallback<Uri[]> filePathCallback;
-                  private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
-                  @Override protected void onCreate(Bundle savedInstanceState) {
-                      super.onCreate(savedInstanceState);
-                      requestWindowFeature(Window.FEATURE_NO_TITLE);
-                      getWindow().setStatusBarColor(android.graphics.Color.parseColor("#050202"));
-                      getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#050202"));
-                      webView = new WebView(this);
-                      webView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                      WebSettings settings = webView.getSettings();
-                      settings.setJavaScriptEnabled(true);
-                      settings.setDomStorageEnabled(true);
-                      settings.setDatabaseEnabled(true);
-                      settings.setAllowFileAccess(true);
-                      settings.setAllowContentAccess(true);
-                      settings.setMediaPlaybackRequiresUserGesture(false);
-                      settings.setBuiltInZoomControls(false);
-                      settings.setDisplayZoomControls(false);
-                      settings.setSupportZoom(false);
-                      settings.setTextZoom(100);
-                      settings.setUseWideViewPort(false);
-                      settings.setLoadWithOverviewMode(false);
-                      webView.setVerticalScrollBarEnabled(true);
-                      webView.setHorizontalScrollBarEnabled(false);
-                      webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
-                      webView.setWebViewClient(new WebViewClient());
-                      webView.setWebChromeClient(new WebChromeClient() {
-                          @Override public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-                              if (MainActivity.this.filePathCallback != null) MainActivity.this.filePathCallback.onReceiveValue(null);
-                              MainActivity.this.filePathCallback = filePathCallback;
-                              Intent intent = fileChooserParams.createIntent();
-                              try { startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE); }
-                              catch (Exception e) { MainActivity.this.filePathCallback = null; return false; }
-                              return true;
+          }
+          """, encoding="utf-8")
+
+          (values_dir / "strings.xml").write_text(f"""<resources>
+              <string name="app_name">{escape(app_name)}</string>
+          </resources>
+          """, encoding="utf-8")
+
+          (values_dir / "styles.xml").write_text("""<resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+                  <item name="android:windowNoTitle">true</item>
+                  <item name="android:windowActionBar">false</item>
+                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:statusBarColor">#050202</item>
+                  <item name="android:navigationBarColor">#050202</item>
+              </style>
+          </resources>
+          """, encoding="utf-8")
+
+          (drawable_dir / "ic_launcher.xml").write_text("""<vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path android:fillColor="#050202" android:pathData="M0,0h108v108h-108z"/>
+              <path android:fillColor="#690912" android:pathData="M18,18h72v72h-72z"/>
+              <path android:fillColor="#e43642" android:pathData="M54,16 L88,54 L54,92 L20,54 Z"/>
+              <path android:fillColor="#050202" android:pathData="M54,30 L74,54 L54,78 L34,54 Z"/>
+              <path android:fillColor="#d8a549" android:pathData="M51,42h6v24h-6z"/>
+              <path android:fillColor="#d8a549" android:pathData="M42,51h24v6h-24z"/>
+          </vector>
+          """, encoding="utf-8")
+
+          (root / "app/src/main/AndroidManifest.xml").write_text("""<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <application
+                  android:theme="@style/AppTheme"
+                  android:label="@string/app_name"
+                  android:icon="@drawable/ic_launcher"
+                  android:usesCleartextTraffic="true"
+                  android:resizeableActivity="true"
+                  android:allowBackup="true"
+                  android:supportsRtl="true">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+
+                  </activity>
+              </application>
+          </manifest>
+          """, encoding="utf-8")
+
+          (java_dir / "MainActivity.java").write_text("""package com.orueu.htmlapk;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.webkit.WebView;
+          import android.webkit.WebSettings;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebChromeClient;
+          import android.webkit.ValueCallback;
+          import android.view.ViewGroup;
+          import android.widget.FrameLayout;
+          import android.view.Window;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              private ValueCallback<Uri[]> filePathCallback;
+              private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  requestWindowFeature(Window.FEATURE_NO_TITLE);
+                  getWindow().setStatusBarColor(android.graphics.Color.parseColor("#050202"));
+                  getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#050202"));
+
+                  webView = new WebView(this);
+                  webView.setLayoutParams(new FrameLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.MATCH_PARENT
+                  ));
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setMediaPlaybackRequiresUserGesture(false);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setSupportZoom(false);
+                  settings.setTextZoom(100);
+                  settings.setUseWideViewPort(false);
+                  settings.setLoadWithOverviewMode(false);
+
+                  webView.setVerticalScrollBarEnabled(true);
+                  webView.setHorizontalScrollBarEnabled(false);
+                  webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
+
+                  webView.setWebViewClient(new WebViewClient());
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public boolean onShowFileChooser(
+                              WebView webView,
+                              ValueCallback<Uri[]> filePathCallback,
+                              FileChooserParams fileChooserParams
+                      ) {
+                          if (MainActivity.this.filePathCallback != null) {
+                              MainActivity.this.filePathCallback.onReceiveValue(null);
                           }
-                      });
-                      setContentView(webView);
-                      webView.loadUrl("file:///android_asset/index.html");
-                  }
-                  @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-                      if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
-                          if (filePathCallback == null) { super.onActivityResult(requestCode, resultCode, data); return; }
-                          Uri[] results = null;
-                          if (resultCode == RESULT_OK && data != null && data.getData() != null) results = new Uri[]{data.getData()};
-                          filePathCallback.onReceiveValue(results);
-                          filePathCallback = null;
+
+                          MainActivity.this.filePathCallback = filePathCallback;
+
+                          Intent intent = fileChooserParams.createIntent();
+
+                          try {
+                              startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
+                          } catch (Exception e) {
+                              MainActivity.this.filePathCallback = null;
+                              return false;
+                          }
+
+                          return true;
+                      }
+                  });
+
+                  setContentView(webView);
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+                      if (filePathCallback == null) {
+                          super.onActivityResult(requestCode, resultCode, data);
                           return;
                       }
-                      super.onActivityResult(requestCode, resultCode, data);
+
+                      Uri[] results = null;
+
+                      if (resultCode == RESULT_OK && data != null) {
+                          Uri dataUri = data.getData();
+                          if (dataUri != null) {
+                              results = new Uri[]{dataUri};
+                          }
+                      }
+
+                      filePathCallback.onReceiveValue(results);
+                      filePathCallback = null;
+                      return;
                   }
-                  @Override public void onBackPressed() {
-                      if (webView != null && webView.canGoBack()) webView.goBack();
-                      else super.onBackPressed();
+
+                  super.onActivityResult(requestCode, resultCode, data);
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
                   }
               }
-          """).strip() + "\n", encoding="utf-8")
-          print("Projeto Android criado com sucesso.")'
+          }
+          """, encoding="utf-8")
+
+          print("Projeto Android criado com sucesso.")
+          PY
 
       - name: Gerar APK
         run: |
