@@ -1,65 +1,396 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#080303" />
-<title>Central do Player Mobile — Ficha + Combate</title>
-<style>
-:root{--bg:#050202;--card:#120707;--line:#4b2527;--line2:#793135;--text:#fff4ea;--muted:#bfa9a0;--red:#e43642;--blood:#690912;--gold:#d8a549;--green:#88d26d;--blue:#83baff;--purple:#c997ff;--r:18px;--tap:52px;--safeBottom:env(safe-area-inset-bottom,0px);--safeTop:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;overflow-x:hidden;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;font-size:16px;touch-action:pan-y;overscroll-behavior-y:contain}body{background:radial-gradient(circle at 50% -8%,rgba(228,54,66,.22),transparent 36%),linear-gradient(160deg,#030101,#120606 55%,#050202);padding-top:var(--safeTop)}body.formOn{background:radial-gradient(circle at 50% 0,rgba(228,54,66,.34),transparent 38%),linear-gradient(160deg,#070101,#1e0507 56%,#030101)}body.sangue{--red:#e43642;--blood:#690912;--gold:#d8a549;--line:#4b2527;--line2:#793135}body.morte{--red:#9b9b9b;--blood:#121212;--gold:#dedede;--line:#393939;--line2:#6b6b6b}body.conhecimento{--red:#d8a549;--blood:#4d3409;--gold:#ffe2a3;--line:#5b4520;--line2:#9b7838}body.energia{--red:#b965ff;--blood:#1a0730;--gold:#e5c7ff;--line:#4d2868;--line2:#8b4cc0}button,input,select,textarea{font:inherit;font-size:16px}button{min-height:var(--tap);border:1px solid var(--line);background:#15090a;color:var(--text);border-radius:14px;padding:10px 12px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}button:active{transform:scale(.985);background:#261012;border-color:var(--red)}input,select,textarea{width:100%;min-height:48px;border:1px solid #523031;background:#0d0606;color:var(--text);border-radius:14px;padding:11px;outline:none}textarea{min-height:100px;resize:vertical}label{display:block;margin:9px 0 5px;color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:900;letter-spacing:.08em}h1,h2,h3,p{margin-top:0}h1{font-size:28px;line-height:.95;margin:6px 0;text-transform:uppercase;text-shadow:3px 3px #000}h2{display:flex;align-items:center;gap:10px;font-size:18px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}h2:before{content:"";width:24px;height:3px;background:var(--red);box-shadow:0 0 12px var(--red)}h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--red);margin-bottom:10px}.muted,p{color:var(--muted);line-height:1.45}.app{width:min(720px,100%);margin:0 auto;padding:8px 8px calc(96px + var(--safeBottom))}.hero,.sheet,.panel,.item,.stat{border:1px solid var(--line);background:linear-gradient(180deg,rgba(28,13,14,.96),rgba(8,4,4,.97));border-radius:var(--r);box-shadow:0 14px 45px rgba(0,0,0,.38)}.hero{padding:14px;position:sticky;top:0;z-index:20;border-top-left-radius:0;border-top-right-radius:0}.heroTop{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center}.avatar{width:64px;height:64px;border:1px solid var(--line2);border-radius:18px;background:radial-gradient(circle,rgba(228,54,66,.32),#050202 70%);display:grid;place-items:center;overflow:hidden;box-shadow:inset 0 0 28px rgba(0,0,0,.75)}.avatar img{width:100%;height:100%;object-fit:cover}.avatar span{font-size:26px;font-weight:900}.chips,.actions,.miniActions{display:flex;gap:7px;flex-wrap:wrap}.chip{display:inline-flex;align-items:center;min-height:28px;border:1px solid var(--line2);background:rgba(0,0,0,.25);border-radius:999px;color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:900;padding:5px 8px}.ok{color:#dfffd6;border-color:rgba(136,210,109,.7)}.warn{color:#ffe4a9;border-color:rgba(216,165,73,.8)}.bad{color:#ffd0d0;border-color:rgba(228,54,66,.85)}.info{color:#d8ebff;border-color:rgba(131,186,255,.75)}.purple{color:#efd8ff;border-color:rgba(201,151,255,.8)}.quickStats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.qstat{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:16px;padding:8px}.qstat b{display:block;font-size:18px}.qstat span{font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:900}.bar{height:9px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(0,0,0,.5);overflow:hidden;margin-top:6px}.fill{height:100%;background:linear-gradient(90deg,#8b1018,var(--red));transition:.2s}.blueFill{background:linear-gradient(90deg,#1d4169,var(--blue))}.greenFill{background:linear-gradient(90deg,#2f652c,var(--green))}.goldFill{background:linear-gradient(90deg,#6b4b17,var(--gold))}.sheet{padding:12px;margin-top:10px}.grid{display:grid;gap:9px}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}.panel,.item,.stat{padding:12px}.title{font-weight:900;text-transform:uppercase;color:#fff}.meta{color:var(--muted);font-size:12px;margin-top:4px}.desc{white-space:pre-wrap;color:rgba(255,255,255,.84);line-height:1.42}.statTop{display:flex;justify-content:space-between;align-items:center;gap:8px}.statName{text-transform:uppercase;font-size:12px;font-weight:900;color:#fff}.statValue{font-size:24px;font-weight:900}.actions{margin-top:10px}.actions button{flex:1 1 calc(50% - 7px)}.miniActions{margin-top:8px}.miniActions button{min-height:38px;font-size:11px;padding:7px 9px;flex:1}.danger{background:var(--blood);border-color:var(--red)}.greenBtn{border-color:rgba(136,210,109,.7);color:#dfffd6}.blueBtn{border-color:rgba(131,186,255,.7);color:#d8ebff}.goldBtn{border-color:rgba(216,165,73,.8);color:#ffe4a9}.purpleBtn{border-color:rgba(201,151,255,.8);color:#efd8ff}.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(5,2,2,.97);border-top:1px solid var(--line);padding:7px 7px calc(7px + var(--safeBottom));display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{min-width:88px;min-height:54px;font-size:10px;padding:6px 8px;border-radius:15px}.tabs button.active{background:rgba(105,9,18,.52);border-color:var(--red)}.fab{position:fixed;right:12px;bottom:calc(78px + var(--safeBottom));z-index:25;width:58px;height:58px;border-radius:22px;background:var(--blood);border-color:var(--red);font-size:20px;box-shadow:0 12px 34px rgba(0,0,0,.5)}.search{position:sticky;top:151px;z-index:10;background:rgba(5,2,2,.92);padding:8px 0}.formBanner{border:1px solid rgba(228,54,66,.8);background:rgba(105,9,18,.45);border-radius:18px;text-align:center;padding:14px;margin-bottom:10px}.formBanner span{display:block;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:900}.formBanner strong{display:block;text-transform:uppercase;font-size:28px;text-shadow:3px 3px #000}.check{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px}.check input{width:20px;min-height:20px}.rollPop{position:fixed;left:10px;right:10px;top:calc(10px + var(--safeTop));z-index:90;pointer-events:none;opacity:0;transform:translateY(-16px);transition:.2s;border:1px solid var(--line2);background:linear-gradient(180deg,rgba(18,7,7,.98),rgba(6,2,2,.98));border-radius:18px;padding:12px;box-shadow:0 18px 50px rgba(0,0,0,.55)}.rollPop.show{opacity:1;transform:translateY(0)}.rollPop .rpTitle{font-weight:900;text-transform:uppercase;color:#fff}.rollPop .rpResult{font-size:26px;font-weight:900;color:var(--gold);line-height:1.1;margin-top:4px}.rollPop .rpDetail{color:var(--muted);font-size:12px;margin-top:4px;word-break:break-word}.rollPop.damage{border-color:rgba(228,54,66,.9)}.rollPop.crit{border-color:rgba(216,165,73,.95);box-shadow:0 0 28px rgba(216,165,73,.18),0 18px 50px rgba(0,0,0,.55)}.rollPop.ritual{border-color:rgba(201,151,255,.9)}.rollPop.skill{border-color:rgba(131,186,255,.9)}.toast{position:fixed;left:50%;bottom:calc(90px + var(--safeBottom));transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;z-index:80;background:#100707;border:1px solid var(--red);border-radius:14px;padding:12px 16px;box-shadow:0 12px 34px rgba(0,0,0,.5);transition:.18s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.hidden{display:none!important}@media(min-width:760px){.app{padding-bottom:20px}.tabs{position:sticky;top:91px;border:1px solid var(--line);border-radius:18px;margin:10px auto;padding:7px;max-width:720px}.tabs button{min-width:100px}.fab{display:none}.search{top:168px}.actions button{flex:0 1 auto}.hero{top:0;border-radius:0 0 18px 18px}}
-</style>
-</head>
-<body>
-<main class="app">
-  <section class="hero"><div class="heroTop"><div class="avatar" id="avatar"></div><div><span class="chip bad">Central do Player</span><h1 id="heroName">Agente</h1><div class="chips"><span class="chip info" id="heroClass"></span><span class="chip warn" id="heroNex"></span><span class="chip" id="heroForm"></span></div></div></div><div class="quickStats" id="quickStats"></div></section>
-  <nav class="tabs" id="tabs"></nav>
-  <section class="sheet" id="view"></section>
-</main>
-<button class="fab" id="fab" onclick="fabAction()">＋</button>
-<div class="rollPop" id="rollPop"></div><div class="toast" id="toast"></div>
-<input id="importFile" type="file" accept="application/json" class="hidden" onchange="importFile(event)">
-<script>
-const SAVE_KEY='central-player-mobile-v1';
-const ATTRS=['Força','Agilidade','Intelecto','Presença','Vigor'];
-const SKILLS=['Acrobacia','Adestramento','Artes','Atletismo','Atualidades','Ciências','Crime','Diplomacia','Enganação','Fortitude','Furtividade','Iniciativa','Intimidação','Intuição','Investigação','Luta','Medicina','Ocultismo','Percepção','Pilotagem','Pontaria','Profissão','Reflexos','Religião','Sobrevivência','Tática','Tecnologia','Vontade'];
-const TABS=[['home','Início'],['prepare','Preparar'],['combat','Combate'],['rituals','Rituais'],['skills','Perícias'],['powers','Poderes'],['items','Itens'],['conds','Efeitos'],['form','Forma'],['notes','Notas'],['tools','Tools'],['settings','Config']];
-let tab='home';let state=blank();
-function uid(){return 'id'+Date.now()+Math.floor(Math.random()*999999)}function n(v){return Number(v||0)}function safe(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
-function skillAttr(s){const m={Acrobacia:'Agilidade',Crime:'Agilidade',Furtividade:'Agilidade',Iniciativa:'Agilidade',Pilotagem:'Agilidade',Pontaria:'Agilidade',Reflexos:'Agilidade',Atletismo:'Força',Luta:'Força',Fortitude:'Vigor',Adestramento:'Presença',Artes:'Presença',Diplomacia:'Presença',Enganação:'Presença',Intimidação:'Presença',Intuição:'Presença',Percepção:'Presença',Vontade:'Presença',Atualidades:'Intelecto',Ciências:'Intelecto',Investigação:'Intelecto',Medicina:'Intelecto',Ocultismo:'Intelecto',Profissão:'Intelecto',Religião:'Intelecto',Sobrevivência:'Intelecto',Tática:'Intelecto',Tecnologia:'Intelecto'};return m[s]||'Intelecto'}
-function blank(){let attrs={},skills={};ATTRS.forEach(a=>attrs[a]={base:1,temp:0});SKILLS.forEach(s=>skills[s]={attr:skillAttr(s),train:0,bonus:0,temp:0,dice:0});return{p:{name:'Agente Sem Nome',class:'Sobrevivente',trail:'—',origin:'—',nex:5,level:1,affinity:'',image:'',theme:'sangue'},s:{pv:20,pvMax:20,pe:4,peMax:4,san:20,sanMax:20,pd:0,pdMax:0,def:10,rd:0,move:9,dt:0,peTurn:1},attrs,skills,attacks:[{id:uid(),name:'Ataque Improvisado',atk:'1d20+0',dmg:'1d6',crit:'20/x2',range:'Corpo a corpo',ammo:0,ammoMax:0,equipped:true,notes:'',vars:[]}],rituals:[],powers:[],items:[],conds:[],form:{on:false,name:'Forma Especial',desc:'Configure a transformação do personagem.',phrase:'Agora eu termino isso.',rounds:0,max:0,act:{pv:0,pe:0,san:0,pd:0},keep:{pv:0,pe:0,san:0,pd:0},b:{pvMax:0,peMax:0,sanMax:0,pdMax:0,def:0,rd:0,move:0,attrs:{},skills:{}},powers:[]},prepare:{title:'',type:'Ritual',use:'',target:'',pe:0,pd:0,pv:0,san:0,tests:'',damage:'',notes:'',saved:[]},notes:{order:'',session:'',clues:'',secret:''},rolls:[],ui:{semSan:false,auto:true,narr:false}}}
-function derived(){let d={s:{...state.s},attrs:{},skills:{},powers:[],conds:[]};if(state.form.on){['pvMax','peMax','sanMax','pdMax','def','rd','move'].forEach(k=>d.s[k]=n(d.s[k])+n(state.form.b[k]));Object.keys(state.form.b.attrs||{}).forEach(k=>d.attrs[k]=n(d.attrs[k])+n(state.form.b.attrs[k]));Object.keys(state.form.b.skills||{}).forEach(k=>d.skills[k]=n(d.skills[k])+n(state.form.b.skills[k]));d.powers.push(...state.form.powers.map(x=>({...x,tag:'Forma'})))}ATTRS.forEach(a=>d.attrs[a]=n(state.attrs[a].base)+n(state.attrs[a].temp)+n(d.attrs[a]));SKILLS.forEach(s=>d.skills[s]=n(state.skills[s].train)+n(state.skills[s].bonus)+n(state.skills[s].temp)+n(d.skills[s]));return d}
-function render(){document.body.classList.toggle('formOn',state.form.on);['sangue','morte','conhecimento','energia'].forEach(x=>document.body.classList.toggle(x,state.p.theme===x));const d=derived(),s=d.s;heroName.textContent=state.p.name;heroClass.textContent=(state.p.class||'Classe')+' • '+(state.p.trail||'Trilha');heroNex.textContent='NEX '+state.p.nex+'%';heroForm.textContent=state.form.on?'Forma ativa':'Forma inativa';heroForm.className='chip '+(state.form.on?'bad':'warn');avatar.innerHTML=state.p.image?`<img src="${safe(state.p.image)}">`:`<span>${initials(state.p.name)}</span>`;quickStats.innerHTML=qstat('PV',s.pv,s.pvMax,'')+qstat(state.ui.semSan?'PD':'PE',state.ui.semSan?s.pd:s.pe,state.ui.semSan?s.pdMax:s.peMax,'blueFill')+(state.ui.semSan?'':qstat('SAN',s.san,s.sanMax,'greenFill'));tabs.innerHTML=TABS.map(([id,name])=>`<button class="${tab===id?'active':''}" onclick="tab='${id}';render()">${name}</button>`).join('');view.innerHTML=(views[tab]||views.home)();fab.classList.toggle('hidden',['home','prepare','settings','tools'].includes(tab));if(state.ui.auto)save(false)}
-function qstat(name,cur,max,cls){let pct=max?Math.max(0,Math.min(100,cur/max*100)):0;return`<div class="qstat"><span>${name}</span><b>${cur}/${max}</b><div class="bar"><div class="fill ${cls}" style="width:${pct}%"></div></div></div>`}
-const views={
-home(){let d=derived(),s=d.s;return`<h2>Painel rápido</h2>${state.form.on?`<div class="formBanner"><span>Forma ativa</span><strong>${safe(state.form.name)}</strong><p>${safe(state.form.phrase)}</p></div>`:''}<div class="grid two"><button class="goldBtn" onclick="startTurn()">Início do turno</button><button onclick="endTurn()">Fim do turno</button>${state.form.on?`<button class="purpleBtn" onclick="keepForm()">Manter forma</button><button class="danger" onclick="endForm()">Encerrar</button>`:`<button class="danger" onclick="activateForm()">Transformar</button><button class="blueBtn" onclick="roll('1d20','d20')">Rolar d20</button>`}</div><div class="grid two" style="margin-top:10px"><div class="stat"><div class="statTop"><span class="statName">Defesa</span><span class="statValue">${s.def}</span></div><p class="meta">RD ${s.rd} • Desloc. ${s.move}m • DT ${s.dt||'—'} • PE/turno ${s.peTurn||'—'}</p></div><div class="stat"><div class="statTop"><span class="statName">Condições</span><span class="statValue">${state.conds.length}</span></div><div class="chips">${state.conds.slice(0,3).map(c=>`<span class="chip ${c.type==='Debuff'?'bad':'info'}">${safe(c.name)}</span>`).join('')||'<span class="chip ok">Limpo</span>'}</div></div></div><div class="panel" style="padding:12px;margin-top:10px"><h3>Ordem de ação</h3><textarea onchange="state.notes.order=this.value;render()" placeholder="Seu combo, buffs, ordem de rituais...">${safe(state.notes.order)}</textarea></div><h2 style="margin-top:14px">Ataques equipados</h2><div class="list">${state.attacks.filter(a=>a.equipped).map(attackCard).join('')||'<p class="muted">Nenhum ataque equipado.</p>'}</div>`},
-prepare(){let p=state.prepare;return`<h2>Preparar ação</h2><div class="panel" style="padding:12px"><h3>Plano do próximo turno</h3>${field('Nome do plano','prepare.title')}<label>Tipo de ação</label><select onchange="state.prepare.type=this.value;render()"><option ${p.type==='Ataque'?'selected':''}>Ataque</option><option ${p.type==='Ritual'?'selected':''}>Ritual</option><option ${p.type==='Habilidade'?'selected':''}>Habilidade</option><option ${p.type==='Item'?'selected':''}>Item</option><option ${p.type==='Movimento'?'selected':''}>Movimento</option><option ${p.type==='Outro'?'selected':''}>Outro</option></select>${field('Vou usar','prepare.use')}${field('Alvo','prepare.target')}<div class="grid two">${numField('PE previsto','prepare.pe')}${numField('PD previsto','prepare.pd')}${numField('PV previsto','prepare.pv')}${numField('SAN previsto','prepare.san')}</div>${field('Testes que vou fazer','prepare.tests')}${field('Dano / rolagem','prepare.damage')}${area('Observações','prepare.notes')}<div class="grid two"><button class="greenBtn" onclick="executePrepared()">Executar agora</button><button class="blueBtn" onclick="copyPrepared()">Copiar</button><button class="goldBtn" onclick="savePreparedPlan()">Salvar plano</button><button class="danger" onclick="clearPrepared()">Limpar</button></div></div><h3 style="margin-top:12px">Planos rápidos</h3><div class="list">${(p.saved||[]).map((x,i)=>`<article class="item"><div class="title">${safe(x.title||'Plano')}</div><p class="meta">${safe(x.type)} • PE ${x.pe||0} • PD ${x.pd||0} • PV ${x.pv||0} • SAN ${x.san||0}</p><p class="desc">${safe(x.use||'')} ${x.target?'→ '+safe(x.target):''}</p><div class="miniActions"><button onclick="loadPreparedPlan(${i})">Carregar</button><button class="danger" onclick="state.prepare.saved.splice(${i},1);render()">Excluir</button></div></article>`).join('')||'<p class="muted">Nenhum plano salvo ainda.</p>'}</div>`},
-combat(){return`<h2>Combate</h2><div class="list">${state.attacks.map(attackCard).join('')}</div>`},
-rituals(){return`<h2>Rituais</h2><div class="search"><input id="ritQ" placeholder="Buscar ritual..." oninput="render()"></div><div class="list">${state.rituals.filter(r=>filter('ritQ',r.name+r.el+r.desc)).map(ritualCard).join('')||'<p class="muted">Nenhum ritual. Importe uma ficha ou toque em ＋.</p>'}</div>`},
-skills(){let d=derived();return`<h2>Perícias</h2><div class="search"><input id="skillQ" placeholder="Buscar perícia..." oninput="render()"></div><div class="list">${SKILLS.filter(s=>filter('skillQ',s)).map(s=>skillCard(s,d)).join('')}</div>`},
-powers(){return`<h2>Poderes e Habilidades</h2><div class="search"><input id="powQ" placeholder="Buscar poder..." oninput="render()"></div><div class="list">${allPowers().filter(p=>filter('powQ',p.name+p.effect+p.type)).map(powerCard).join('')||'<p class="muted">Nenhuma habilidade.</p>'}</div>`},
-items(){return`<h2>Inventário</h2><div class="list">${state.items.map(itemCard).join('')||'<p class="muted">Inventário vazio.</p>'}</div>`},
-conds(){return`<h2>Condições</h2><div class="grid two"><button onclick="addCond()">+ Condição</button><button onclick="tickConds();render()">Passar rodada</button></div><div class="list" style="margin-top:10px">${state.conds.map((c,i)=>condCard(c,i)).join('')||'<p class="muted">Sem condições.</p>'}</div>`},
-form(){let f=state.form;return`<h2>Forma especial</h2><div class="formBanner"><span>${f.on?'Ativa':'Inativa'}</span><strong>${safe(f.name)}</strong><p>${safe(f.desc)}</p></div><div class="grid two">${f.on?`<button class="purpleBtn" onclick="keepForm()">Manter</button><button class="danger" onclick="endForm()">Encerrar</button>`:`<button class="danger" onclick="activateForm()">Transformar</button><button onclick="addFormPower()">+ Poder</button>`}</div><div class="panel" style="padding:12px;margin-top:10px"><h3>Configuração</h3>${field('Nome','form.name')}${area('Descrição','form.desc')}${field('Frase','form.phrase')}<div class="grid two">${numField('Ativar PE','form.act.pe')}${numField('Ativar SAN','form.act.san')}${numField('Manter PE','form.keep.pe')}${numField('Manter SAN','form.keep.san')}${numField('Bônus PV Max','form.b.pvMax')}${numField('Bônus Defesa','form.b.def')}${numField('Bônus RD','form.b.rd')}${numField('Bônus PE Max','form.b.peMax')}</div></div><h3 style="margin-top:12px">Poderes da forma</h3><div class="list">${f.powers.map(p=>powerCard({...p,tag:'Forma'})).join('')||'<p class="muted">Sem poderes da forma.</p>'}</div>`},
-notes(){return`<h2>Notas</h2>${area('Sessão','notes.session')}${area('Pistas','notes.clues')}${area('Segredos / pessoal','notes.secret')}`},
-tools(){return`<h2>Ferramentas</h2><div class="grid"><div class="item"><h3>Rolador</h3><input id="rollExp" value="1d20+5"><button onclick="roll(document.getElementById('rollExp').value,'Rolagem')">Rolar</button></div><div class="item"><h3>Dano contra RD</h3><input id="dmgExp" value="2d6+3"><label>RD</label><input id="rdExp" type="number" value="0"><button onclick="calcDamage()">Calcular</button><p id="dmgOut" class="muted"></p></div><div class="item"><h3>Rolagens recentes</h3><div class="log">${state.rolls.slice(-10).reverse().map(r=>`<div class="meta"><b>${safe(r.t)}</b><br>${safe(r.x)}</div>`).join('')||'<p class="muted">Nada ainda.</p>'}</div></div></div>`},
-settings(){return`<h2>Configurações</h2><div class="grid"><button class="greenBtn" onclick="save()">Salvar agora</button><button class="blueBtn" onclick="exportJSON()">Exportar backup</button><button onclick="document.getElementById('importFile').click()">Importar ficha JSON</button><label class="check"><input type="checkbox" ${state.ui.semSan?'checked':''} onchange="state.ui.semSan=this.checked;render()"> Jogando sem Sanidade</label><label class="check"><input type="checkbox" ${state.ui.narr?'checked':''} onchange="state.ui.narr=this.checked;render()"> Combate Narrativo</label><label class="check"><input type="checkbox" ${state.ui.auto?'checked':''} onchange="state.ui.auto=this.checked;render()"> Auto-salvar</label><label>Elemento visual</label><select onchange="state.p.theme=this.value;render()"><option value="sangue" ${state.p.theme==='sangue'?'selected':''}>Sangue</option><option value="morte" ${state.p.theme==='morte'?'selected':''}>Morte</option><option value="conhecimento" ${state.p.theme==='conhecimento'?'selected':''}>Conhecimento</option><option value="energia" ${state.p.theme==='energia'?'selected':''}>Energia</option></select><button class="danger" onclick="resetAll()">Resetar ficha</button></div>`}
-};
-function field(label,path){return`<label>${label}</label><input value="${safe(get(path))}" onchange="set('${path}',this.value)">`}function numField(label,path){return`<div><label>${label}</label><input type="number" value="${n(get(path))}" onchange="set('${path}',Number(this.value))"></div>`}function area(label,path){return`<label>${label}</label><textarea onchange="set('${path}',this.value)">${safe(get(path))}</textarea>`}
-function attackCard(a){return`<article class="item"><div class="title">${safe(a.name)} ${a.equipped?'<span class="chip ok">eqp</span>':''}</div><p class="meta">${safe(a.atk)} • ${safe(a.dmg)} • ${safe(a.crit)} • ${safe(a.range)} • Mun. ${a.ammo}/${a.ammoMax}</p>${a.notes?`<p class="desc">${safe(a.notes)}</p>`:''}<div class="miniActions"><button onclick="roll('${safe(a.atk)}','Ataque: ${safe(a.name)}')">Atk</button><button onclick="roll('${safe(a.dmg)}','Dano: ${safe(a.name)}')">Dano</button><button onclick="roll(crit('${safe(a.dmg)}','${safe(a.crit)}'),'Crítico: ${safe(a.name)}')">Crit</button><button onclick="ammo('${a.id}',-1)">Mun</button></div>${(a.vars||[]).map(v=>`<div class="item" style="margin-top:8px"><div class="title">${safe(v.name)}</div><p class="meta">${safe(v.atk)} • ${safe(v.dmg)} • ${safe(v.cost||'')}</p><div class="miniActions"><button onclick="roll('${safe(v.atk)}','Ataque: ${safe(v.name)}')">Atk</button><button onclick="roll('${safe(v.dmg)}','Dano: ${safe(v.name)}')">Dano</button><button onclick="roll(crit('${safe(v.dmg)}','${safe(v.crit||a.crit)}'),'Crítico: ${safe(v.name)}')">Crit</button></div></div>`).join('')}</article>`}
-function ritualCard(r){return`<article class="item"><div class="title">${safe(r.name)} <span class="chip info">${safe(r.el)}</span></div><p class="meta">${safe(r.circ)}º círculo • Custo ${safe(r.cost)} • DT ${derived().s.dt||'—'} ${r.sustain?'<span class="chip warn">sust.</span>':''}</p><p class="desc">${safe(r.desc)}</p><div class="miniActions"><button onclick="cast('${r.id}')">Conjurar</button><button onclick="r.sustain=!r.sustain;render()">Sust.</button><button onclick="roll(r.dmg||detect(r.desc)||prompt('Dano','1d6'),'Dano: ${safe(r.name)}')">Dano</button></div></article>`}
-function skillCard(s,d){let sk=state.skills[s];return`<article class="item"><div class="title">${s} <span class="chip info">${d.skills[s]>=0?'+':''}${d.skills[s]}</span></div><p class="meta">${sk.attr} • treino ${sk.train} • bônus ${sk.bonus} • temp ${sk.temp}</p><div class="miniActions"><button onclick="rollSkill('${s}')">Rolar</button><button onclick="editSkill('${s}')">Editar</button></div></article>`}
-function powerCard(p){return`<article class="item"><div class="title">${safe(p.name)} ${p.tag?`<span class="chip bad">${safe(p.tag)}</span>`:''}</div><p class="meta">${safe(p.type||'')} • ${safe(p.cost||'sem custo')} • ${safe(p.action||'')}</p><p class="desc">${safe(p.effect||'')}</p><div class="miniActions"><button onclick="addLog('Habilidade', '${safe(p.name)} usada');toast('Habilidade registrada.')">Usar</button></div></article>`}
-function itemCard(it){return`<article class="item"><div class="title">${safe(it.name)} ${it.eq?'<span class="chip ok">eqp</span>':''}</div><p class="meta">${safe(it.cat)} • qtd ${it.qty} • carga ${it.load} • usos ${it.uses}/${it.usesMax}</p><p class="desc">${safe(it.desc||'')}</p><div class="miniActions"><button onclick="it.uses=Math.max(0,n(it.uses)-1);render()">Usar</button><button onclick="it.eq=!it.eq;render()">Eqp</button></div></article>`}
-function condCard(c,i){return`<article class="item"><div class="title">${safe(c.name)} <span class="chip ${c.type==='Debuff'?'bad':'info'}">${safe(c.type||'estado')}</span></div><p class="meta">${c.dur?c.dur+' rodadas':'indefinida'}</p><p class="desc">${safe(c.effect||'')}</p><div class="miniActions"><button onclick="c.dur=Math.max(0,n(c.dur)-1);if(c.dur===0)state.conds.splice(${i},1);render()">-1</button><button onclick="c.dur=n(c.dur)+1;render()">+1</button><button class="danger" onclick="state.conds.splice(${i},1);render()">Encerrar</button></div></article>`}
-function allPowers(){return[...state.powers,...derived().powers]}function fabAction(){if(tab==='combat')addAttack();else if(tab==='rituals')addRitual();else if(tab==='powers')addPower();else if(tab==='items')addItem();else if(tab==='conds')addCond();else if(tab==='form')addFormPower();else toast('Use os botões da tela.')}function filter(id,text){let el=document.getElementById(id),q=(el?.value||'').toLowerCase();return !q||String(text).toLowerCase().includes(q)}
-function addAttack(){state.attacks.push({id:uid(),name:ask('Nome','Novo Ataque'),atk:ask('Teste','1d20+0'),dmg:ask('Dano','1d6'),crit:ask('Crítico','20/x2'),range:ask('Alcance','Curto'),ammo:0,ammoMax:0,equipped:true,notes:'',vars:[]});render()}function addRitual(){state.rituals.push({id:uid(),name:ask('Nome','Novo Ritual'),el:ask('Elemento','Sangue'),circ:ask('Círculo','1'),cost:ask('Custo','1'),desc:ask('Descrição',''),dmg:'',sustain:false});render()}function addPower(){state.powers.push({id:uid(),name:ask('Nome','Nova Habilidade'),type:ask('Tipo','Ativa'),cost:ask('Custo',''),action:ask('Ação',''),effect:ask('Efeito','')});render()}function addItem(){state.items.push({id:uid(),name:ask('Nome','Novo Item'),cat:ask('Categoria','Equipamento'),qty:n(ask('Quantidade','1')),load:n(ask('Carga','0')),uses:0,usesMax:0,eq:false,desc:ask('Descrição','')});render()}function addCond(){state.conds.push({id:uid(),name:ask('Nome','Condição'),type:ask('Tipo','Debuff'),dur:n(ask('Duração','1')),effect:ask('Efeito',''),dmg:''});render()}function addFormPower(){state.form.powers.push({id:uid(),name:ask('Nome','Poder da Forma'),type:'Forma',cost:'',action:'',effect:ask('Efeito','')});render()}function editSkill(s){let sk=state.skills[s];sk.attr=ask('Atributo',sk.attr);sk.train=n(ask('Treino',sk.train));sk.bonus=n(ask('Bônus',sk.bonus));sk.temp=n(ask('Temp',sk.temp));sk.dice=n(ask('Dados +/-',sk.dice));render()}function ammo(id,v){let a=state.attacks.find(x=>x.id===id);a.ammo=Math.max(0,n(a.ammo)+v);render()}function cast(id){let r=state.rituals.find(x=>x.id===id),cost=n(String(r.cost).match(/\d+/)?.[0]);spend(state.ui.semSan?'pd':'pe',cost);addLog('Ritual',r.name+' conjurado. Custo '+r.cost);toast('Ritual conjurado.');render()}function spend(k,v){state.s[k]=Math.max(0,n(state.s[k])-n(v))}
-function executePrepared(){let p=state.prepare;if(n(p.pe))spend('pe',p.pe);if(n(p.pd))spend('pd',p.pd);if(n(p.pv))spend('pv',p.pv);if(n(p.san))spend('san',p.san);let summary=`${p.type}: ${p.use||p.title||'ação preparada'}${p.target?' em '+p.target:''}. Custos: PE ${p.pe||0}, PD ${p.pd||0}, PV ${p.pv||0}, SAN ${p.san||0}.`;addLog('Ação preparada',summary);if(p.tests){String(p.tests).split(/[;,]/).map(x=>x.trim()).filter(Boolean).forEach(x=>roll(x,'Teste preparado'))}if(p.damage)roll(p.damage,'Dano preparado');toast('Ação preparada executada.');render()}function copyPrepared(){let p=state.prepare;let txt=`Plano: ${p.title||'Sem nome'}\nTipo: ${p.type}\nUsar: ${p.use}\nAlvo: ${p.target}\nCustos: PE ${p.pe||0} | PD ${p.pd||0} | PV ${p.pv||0} | SAN ${p.san||0}\nTestes: ${p.tests}\nDano: ${p.damage}\nObs: ${p.notes}`;navigator.clipboard&&navigator.clipboard.writeText(txt);toast('Plano copiado.')}function savePreparedPlan(){let p=state.prepare;state.prepare.saved=state.prepare.saved||[];state.prepare.saved.push(JSON.parse(JSON.stringify({title:p.title,type:p.type,use:p.use,target:p.target,pe:p.pe,pd:p.pd,pv:p.pv,san:p.san,tests:p.tests,damage:p.damage,notes:p.notes})));toast('Plano salvo.');render()}function loadPreparedPlan(i){let saved=state.prepare.saved[i],list=state.prepare.saved;state.prepare={...state.prepare,...JSON.parse(JSON.stringify(saved)),saved:list};render()}function clearPrepared(){let list=state.prepare.saved||[];state.prepare={title:'',type:'Ritual',use:'',target:'',pe:0,pd:0,pv:0,san:0,tests:'',damage:'',notes:'',saved:list};render()}
-function activateForm(){pay(state.form.act);state.form.on=true;state.form.rounds=0;addLog('Forma',state.form.name+' ativada');render()}function keepForm(){pay(state.form.keep);state.form.rounds++;addLog('Forma',state.form.name+' mantida');render()}function endForm(){state.form.on=false;addLog('Forma',state.form.name+' encerrada');render()}function pay(c){['pv','pe','san','pd'].forEach(k=>{if(n(c[k]))spend(k,c[k])})}function startTurn(){tickConds();addLog('Turno','Início do turno');render()}function endTurn(){addLog('Turno','Fim do turno');render()}function tickConds(){state.conds.forEach(c=>{if(c.dur>0)c.dur--});state.conds=state.conds.filter(c=>c.dur!==0)}
-function rollSkill(s){let d=derived(),sk=state.skills[s],dice=Math.max(1,n(d.attrs[sk.attr])+n(sk.dice));roll(`${dice}d20+${d.skills[s]}`,'Teste de '+s)}function roll(exp,title){let r=rollExpr(exp);addLog(title,`${exp} = ${r.total} (${r.detail})`);showRoll(title||'Rolagem',exp,r);render()}function rollExpr(exp){exp=String(exp||'0').toLowerCase().replace(/\s/g,'').replace(/−/g,'-').replace(/ó/g,'6');let parts=exp.match(/[+-]?[^+-]+/g)||['0'],total=0,detail=[];for(let p of parts){let sign=1;if(p[0]==='+')p=p.slice(1);else if(p[0]==='-'){sign=-1;p=p.slice(1)}let m=p.match(/(\d*)d(\d+)/);if(m){let q=n(m[1]||1),f=n(m[2]),rs=[];for(let i=0;i<q;i++){let v=1+Math.floor(Math.random()*f);rs.push(v);total+=sign*v}detail.push((sign<0?'-':'')+q+'d'+f+'['+rs.join(',')+']')}else{let v=n(p);total+=sign*v;detail.push((sign<0?'-':'')+v)}}return{total,detail:detail.join(' + ').replace(/\+ -/g,'- ')}}function crit(dmg,cr){let m=n(String(cr||'x2').match(/x(\d+)/i)?.[1]||2);return String(dmg).replace(/(\d*)d(\d+)/g,(x,q,f)=>(n(q||1)*m)+'d'+f)}function detect(t){let m=String(t||'').replace(/ó/g,'6').match(/\d+d\d+(?:[+\-]\d+)?/i);return m?m[0]:''}function calcDamage(){let r=rollExpr(document.getElementById('dmgExp').value),rd=n(document.getElementById('rdExp').value);document.getElementById('dmgOut').textContent=`Resultado ${r.total}, após RD ${rd}: ${Math.max(0,r.total-rd)}`}function addLog(t,x){state.rolls.push({t,x,time:new Date().toLocaleString('pt-BR')});if(state.rolls.length>120)state.rolls.shift()}function showRoll(title,exp,r){let box=document.getElementById('rollPop');let low=String(title||'').toLowerCase();let cls=low.includes('crítico')||low.includes('critico')?'crit':low.includes('dano')?'damage':low.includes('ritual')?'ritual':low.includes('teste')?'skill':'';box.className='rollPop show '+cls;box.innerHTML=`<div class="rpTitle">${safe(title||'Rolagem')}</div><div class="rpResult">${safe(exp)} = ${r.total}</div><div class="rpDetail">${safe(r.detail)}</div>`;clearTimeout(window.__rp);window.__rp=setTimeout(()=>box.classList.remove('show'),4200)}
-function importFile(ev){let f=ev.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let j=JSON.parse(rd.result);if(j.nome||j.stats||j.rit)importOrdem(j);else state={...blank(),...j};save(false);render();toast('Ficha importada.')}catch(e){toast('JSON inválido: '+e.message)}};rd.readAsText(f);ev.target.value=''}function importOrdem(j){let c=blank(),src=j.transformado&&confirm('Importar versão transformada?')?j.transformado:j;c.p.name=src.nome||j.nome||'Agente';c.p.class=src.classe||j.classe||'';c.p.trail=src.trilha||j.trilha||'';c.p.origin=src.origem||j.origem||'';c.p.nex=n(src.nex||j.nex);c.p.level=n(src.nivel||j.nivel);c.p.affinity=src.afinidade||j.afinidade||'';c.p.image=src.avt||j.avt||'';c.p.theme=themeFromAffinity(c.p.affinity);c.notes.order=src.note||j.note||'';let st=src.stats||{};c.s.pv=n(st.pvA||st.pvM);c.s.pvMax=n(st.pvM||st.pvA);c.s.pe=n(st.peA||st.peM);c.s.peMax=n(st.peM||st.peA);c.s.san=n(st.sanA||st.sanM);c.s.sanMax=n(st.sanM||st.sanA);c.s.pd=n(st.pdA);c.s.pdMax=n(st.pdM);c.s.def=10+n(st.defEq)+n(st.defOu);c.s.dt=n(st.customDTRitual);c.s.peTurn=Math.max(1,Math.ceil(c.p.nex/5));if(Array.isArray(src.attr))ATTRS.forEach((a,i)=>c.attrs[a].base=n(src.attr[i]));Object.entries(src.skills||{}).forEach(([k,v])=>{if(c.skills[k]){c.skills[k].train=n(v.g);c.skills[k].bonus=n(v.b)}});c.powers=(src.hab||[]).map(h=>({id:uid(),name:clean(h.n),type:h.elemento||h._categoria||'',cost:'',action:'',effect:h.d||''}));c.rituals=(src.rit||[]).map(r=>({id:uid(),name:clean(r.n),el:r.el||'',circ:r.c||'',cost:r.pe||'',desc:r.d||'',dmg:detect(r.d),sustain:false}));c.items=(src.inv||[]).map(it=>({id:uid(),name:clean(it.n),cat:it.itemCategoria||it.cat||'',qty:1,load:n(it.p),uses:0,usesMax:0,eq:false,desc:it.d||''}));c.attacks=(src.inv||[]).filter(it=>it.arma).map(it=>({id:uid(),name:clean(it.n),atk:`1d20+${n(src.skills?.[it.skill||'Luta']?.g)+n(src.skills?.[it.skill||'Luta']?.b)}`,dmg:fixDice(it.dano||detect(it.d)||'1d6'),crit:`${it.margem||20}/${it.mult||'x2'}`,range:it.alcance||it.tipo||'',ammo:0,ammoMax:0,equipped:true,notes:it.d||'',vars:[]}));if(!c.attacks.length)c.attacks=blank().attacks;c.conds=(src.condicoesAtivas||[]).map(x=>typeof x==='string'?{id:uid(),name:x,type:'Estado',dur:0,effect:'',dmg:''}:{id:uid(),...x});if(j.transformado){c.form.name=j.transformado.nome||'Forma Transformada';c.form.desc='Forma importada da ficha.';c.form.b.pvMax=n(j.transformado.customPvBonus);c.form.b.peMax=n(j.transformado.customPeBonus);c.form.b.pdMax=n(j.transformado.customPdBonus);c.form.b.def=n(j.transformado.stats?.defOu);c.form.powers=(j.transformado.hab||[]).slice((j.hab||[]).length).map(h=>({id:uid(),name:clean(h.n),type:'Forma',effect:h.d||''}))}c.ui.semSan=!!(j._modoSemSanidade||st.pdM);state=c}
-function themeFromAffinity(a){a=String(a||'').toLowerCase();if(a.includes('morte'))return'morte';if(a.includes('conhecimento'))return'conhecimento';if(a.includes('energia'))return'energia';return'sangue'}function get(path){return path.split('.').reduce((o,k)=>o?.[k],state)}function set(path,v){let a=path.split('.'),o=state;for(let i=0;i<a.length-1;i++){if(!o[a[i]])o[a[i]]={};o=o[a[i]]}o[a.at(-1)]=v;render()}function save(show=true){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));if(show)toast('Salvo.')}catch(e){toast('Erro ao salvar.')}}function load(show=true){let raw=localStorage.getItem(SAVE_KEY);if(!raw){if(show)toast('Nenhum save.');return}try{state={...blank(),...JSON.parse(raw)};if(show)toast('Carregado.')}catch(e){toast('Save corrompido.')}}function exportJSON(){let b=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=(state.p.name||'central-player')+'-backup.json';a.click();URL.revokeObjectURL(u)}function resetAll(){if(confirm('Resetar ficha?')){state=blank();save(false);render()}}function initials(s){return String(s||'A').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase()}function clean(s){return String(s||'').replace(/^•\s*/,'').trim()}function fixDice(s){return String(s||'').replace(/dó/gi,'d6').replace(/ó/g,'6')}function ask(a,b){let r=prompt(a,b??'');return r===null?b:r}function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),1800)}const toastEl=document.getElementById('toast');
-window.addEventListener('error',ev=>{view.innerHTML=`<h2>Erro ao carregar</h2><div class="item"><p class="bad">${safe(ev.message)}</p><button class="danger" onclick="localStorage.removeItem('${SAVE_KEY}');location.reload()">Limpar save e reabrir</button></div>`});load(false);render();
-</script>
-</body>
-</html>
+name: Transformar HTML em APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: "Nome do aplicativo"
+        required: false
+        default: "Central Player"
+      html_path:
+        description: "Caminho do HTML se houver mais de um. Pode deixar vazio."
+        required: false
+        default: ""
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_NAME: ${{ github.event.inputs.app_name || 'Central Player' }}
+      HTML_PATH_INPUT: ${{ github.event.inputs.html_path || '' }}
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
+
+      - name: Instalar ferramentas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+
+      - name: Instalar SDK Android
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Encontrar HTML
+        run: |
+          set -e
+
+          echo "Arquivos no repositório:"
+          find . -maxdepth 5 -type f | sort
+
+          rm -rf extraido
+          mkdir -p extraido
+
+          ZIP_COUNT=$(find . -type f -iname "*.zip" -not -path "*/.git/*" | wc -l)
+
+          if [ "$ZIP_COUNT" -gt 0 ]; then
+            echo "Extraindo ZIPs encontrados..."
+            i=0
+            while IFS= read -r ZIP_FILE; do
+              i=$((i+1))
+              mkdir -p "extraido/zip_$i"
+              unzip -oq "$ZIP_FILE" -d "extraido/zip_$i"
+            done < <(find . -type f -iname "*.zip" -not -path "*/.git/*")
+          fi
+
+          if [ -n "$HTML_PATH_INPUT" ]; then
+            if [ -f "$HTML_PATH_INPUT" ]; then
+              HTML_FILE="$HTML_PATH_INPUT"
+            elif [ -f "extraido/$HTML_PATH_INPUT" ]; then
+              HTML_FILE="extraido/$HTML_PATH_INPUT"
+            else
+              echo "ERRO: html_path informado não encontrado: $HTML_PATH_INPUT"
+              echo "HTMLs encontrados:"
+              find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) -not -path "*/.git/*" || true
+              exit 1
+            fi
+          else
+            HTML_FILE=$(find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) \
+              -not -path "*/.git/*" \
+              | sort \
+              | grep -Ei "(mobile|central|player|ficha|index).*\.html?$" \
+              | head -n 1 || true)
+
+            if [ -z "$HTML_FILE" ]; then
+              HTML_FILE=$(find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) \
+                -not -path "*/.git/*" \
+                | sort \
+                | head -n 1 || true)
+            fi
+          fi
+
+          if [ -z "$HTML_FILE" ] || [ ! -f "$HTML_FILE" ]; then
+            echo "ERRO: Nenhum HTML encontrado."
+            echo "Envie um arquivo .html ou um .zip contendo o HTML."
+            exit 1
+          fi
+
+          echo "HTML encontrado: $HTML_FILE"
+          echo "HTML_FILE=$HTML_FILE" >> "$GITHUB_ENV"
+
+      - name: Criar projeto Android WebView
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          from xml.sax.saxutils import escape
+          import os
+          import shutil
+
+          app_name = os.environ.get("APP_NAME", "Central Player")
+          html_file = Path(os.environ["HTML_FILE"]).resolve()
+          html_dir = html_file.parent
+
+          root = Path("android_build")
+          if root.exists():
+              shutil.rmtree(root)
+
+          java_dir = root / "app/src/main/java/com/orueu/htmlapk"
+          assets_dir = root / "app/src/main/assets"
+          values_dir = root / "app/src/main/res/values"
+          drawable_dir = root / "app/src/main/res/drawable"
+
+          java_dir.mkdir(parents=True, exist_ok=True)
+          assets_dir.mkdir(parents=True, exist_ok=True)
+          values_dir.mkdir(parents=True, exist_ok=True)
+          drawable_dir.mkdir(parents=True, exist_ok=True)
+
+          for item in html_dir.iterdir():
+              dest = assets_dir / item.name
+              if item.is_dir():
+                  if dest.exists():
+                      shutil.rmtree(dest)
+                  shutil.copytree(item, dest)
+              else:
+                  shutil.copy2(item, dest)
+
+          shutil.copy2(html_file, assets_dir / "index.html")
+
+          (root / "settings.gradle").write_text("""pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "HtmlToApk"
+          include ":app"
+          """, encoding="utf-8")
+
+          (root / "build.gradle").write_text("""plugins {
+              id "com.android.application" version "8.7.3" apply false
+          }
+          """, encoding="utf-8")
+
+          (root / "app/build.gradle").write_text("""plugins {
+              id "com.android.application"
+          }
+
+          android {
+              namespace "com.orueu.htmlapk"
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId "com.orueu.htmlapk"
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName "1.0"
+              }
+          }
+          """, encoding="utf-8")
+
+          (values_dir / "strings.xml").write_text(f"""<resources>
+              <string name="app_name">{escape(app_name)}</string>
+          </resources>
+          """, encoding="utf-8")
+
+          (values_dir / "styles.xml").write_text("""<resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+                  <item name="android:windowNoTitle">true</item>
+                  <item name="android:windowActionBar">false</item>
+                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:statusBarColor">#050202</item>
+                  <item name="android:navigationBarColor">#050202</item>
+              </style>
+          </resources>
+          """, encoding="utf-8")
+
+          (drawable_dir / "ic_launcher.xml").write_text("""<vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path android:fillColor="#050202" android:pathData="M0,0h108v108h-108z"/>
+              <path android:fillColor="#690912" android:pathData="M18,18h72v72h-72z"/>
+              <path android:fillColor="#e43642" android:pathData="M54,16 L88,54 L54,92 L20,54 Z"/>
+              <path android:fillColor="#050202" android:pathData="M54,30 L74,54 L54,78 L34,54 Z"/>
+              <path android:fillColor="#d8a549" android:pathData="M51,42h6v24h-6z"/>
+              <path android:fillColor="#d8a549" android:pathData="M42,51h24v6h-24z"/>
+          </vector>
+          """, encoding="utf-8")
+
+          (root / "app/src/main/AndroidManifest.xml").write_text("""<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <application
+                  android:theme="@style/AppTheme"
+                  android:label="@string/app_name"
+                  android:icon="@drawable/ic_launcher"
+                  android:usesCleartextTraffic="true"
+                  android:resizeableActivity="true"
+                  android:allowBackup="true"
+                  android:supportsRtl="true">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+
+                  </activity>
+              </application>
+          </manifest>
+          """, encoding="utf-8")
+
+          (java_dir / "MainActivity.java").write_text("""package com.orueu.htmlapk;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.webkit.WebView;
+          import android.webkit.WebSettings;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebChromeClient;
+          import android.webkit.ValueCallback;
+          import android.view.ViewGroup;
+          import android.widget.FrameLayout;
+          import android.view.Window;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              private ValueCallback<Uri[]> filePathCallback;
+              private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  requestWindowFeature(Window.FEATURE_NO_TITLE);
+                  getWindow().setStatusBarColor(android.graphics.Color.parseColor("#050202"));
+                  getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#050202"));
+
+                  webView = new WebView(this);
+                  webView.setLayoutParams(new FrameLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.MATCH_PARENT
+                  ));
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setMediaPlaybackRequiresUserGesture(false);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setSupportZoom(false);
+                  settings.setTextZoom(100);
+                  settings.setUseWideViewPort(false);
+                  settings.setLoadWithOverviewMode(false);
+
+                  webView.setVerticalScrollBarEnabled(true);
+                  webView.setHorizontalScrollBarEnabled(false);
+                  webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
+
+                  webView.setWebViewClient(new WebViewClient());
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public boolean onShowFileChooser(
+                              WebView webView,
+                              ValueCallback<Uri[]> filePathCallback,
+                              FileChooserParams fileChooserParams
+                      ) {
+                          if (MainActivity.this.filePathCallback != null) {
+                              MainActivity.this.filePathCallback.onReceiveValue(null);
+                          }
+
+                          MainActivity.this.filePathCallback = filePathCallback;
+
+                          Intent intent = fileChooserParams.createIntent();
+
+                          try {
+                              startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
+                          } catch (Exception e) {
+                              MainActivity.this.filePathCallback = null;
+                              return false;
+                          }
+
+                          return true;
+                      }
+                  });
+
+                  setContentView(webView);
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  if (requestCode == FILE_CHOOSER_REQUEST_CODE) {
+                      if (filePathCallback == null) {
+                          super.onActivityResult(requestCode, resultCode, data);
+                          return;
+                      }
+
+                      Uri[] results = null;
+
+                      if (resultCode == RESULT_OK && data != null) {
+                          Uri dataUri = data.getData();
+                          if (dataUri != null) {
+                              results = new Uri[]{dataUri};
+                          }
+                      }
+
+                      filePathCallback.onReceiveValue(results);
+                      filePathCallback = null;
+                      return;
+                  }
+
+                  super.onActivityResult(requestCode, resultCode, data);
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          """, encoding="utf-8")
+
+          print("Projeto Android criado com sucesso.")
+          PY
+
+      - name: Gerar APK
+        run: |
+          cd android_build
+          gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Encontrar APK
+        run: |
+          APK_PATH=$(find android_build/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+
+          if [ -z "$APK_PATH" ]; then
+            echo "ERRO: APK não encontrado."
+            find android_build -path "*/build/outputs/*" -type f || true
+            exit 1
+          fi
+
+          cp "$APK_PATH" central-player-debug.apk
+
+      - name: Enviar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: central-player-apk
+          path: central-player-debug.apk
