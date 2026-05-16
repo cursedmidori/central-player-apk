@@ -22,11 +22,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     env:
       APP_NAME: ${{ github.event.inputs.app_name || 'Central Player' }}
       HTML_PATH_INPUT: ${{ github.event.inputs.html_path || '' }}
-
     steps:
       - name: Baixar repositório
         uses: actions/checkout@v4
@@ -35,7 +33,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: "17"
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
@@ -43,37 +41,28 @@ jobs:
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 8.10.2
+          gradle-version: "8.10.2"
 
       - name: Instalar ferramentas
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip
-
-      - name: Instalar SDK Android
-        run: |
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Encontrar HTML
+        shell: bash
         run: |
           set -e
-          echo "Arquivos no repositório:"
-          find . -maxdepth 5 -type f | sort
-
-          rm -rf extraido
+          rm -rf extraido android_build
           mkdir -p extraido
 
-          ZIP_COUNT=$(find . -type f -iname "*.zip" -not -path "*/.git/*" | wc -l)
-          if [ "$ZIP_COUNT" -gt 0 ]; then
-            echo "Extraindo ZIPs encontrados..."
-            i=0
-            while IFS= read -r ZIP_FILE; do
-              i=$((i+1))
-              mkdir -p "extraido/zip_$i"
-              unzip -oq "$ZIP_FILE" -d "extraido/zip_$i"
-            done < <(find . -type f -iname "*.zip" -not -path "*/.git/*")
-          fi
+          while IFS= read -r ZIP_FILE; do
+            [ -z "$ZIP_FILE" ] && continue
+            NAME=$(basename "$ZIP_FILE" .zip)
+            mkdir -p "extraido/$NAME"
+            unzip -oq "$ZIP_FILE" -d "extraido/$NAME"
+          done < <(find . -type f -iname "*.zip" -not -path "*/.git/*")
 
           if [ -n "$HTML_PATH_INPUT" ]; then
             if [ -f "$HTML_PATH_INPUT" ]; then
@@ -82,7 +71,6 @@ jobs:
               HTML_FILE="extraido/$HTML_PATH_INPUT"
             else
               echo "ERRO: html_path informado não encontrado: $HTML_PATH_INPUT"
-              echo "HTMLs encontrados:"
               find . extraido -type f \( -iname "*.html" -o -iname "*.htm" \) -not -path "*/.git/*" || true
               exit 1
             fi
@@ -95,13 +83,15 @@ jobs:
 
           if [ -z "$HTML_FILE" ] || [ ! -f "$HTML_FILE" ]; then
             echo "ERRO: Nenhum HTML encontrado. Envie um .html ou um .zip contendo o HTML."
+            find . -maxdepth 6 -type f | sort
             exit 1
           fi
 
           echo "HTML encontrado: $HTML_FILE"
           echo "HTML_FILE=$HTML_FILE" >> "$GITHUB_ENV"
 
-            - name: Criar projeto Android WebView
+      - name: Criar projeto Android WebView
+        shell: bash
         run: |
           python3 <<'PY'
           from pathlib import Path
@@ -126,11 +116,9 @@ jobs:
           values_dir.mkdir(parents=True, exist_ok=True)
           drawable_dir.mkdir(parents=True, exist_ok=True)
 
-          # Copia SOMENTE o HTML principal.
-          # Isso evita o loop infinito copiando android_build dentro dele mesmo.
           shutil.copy2(html_file, assets_dir / "index.html")
 
-          (root / "settings.gradle").write_text("""pluginManagement {
+          (root / "settings.gradle").write_text('''pluginManagement {
               repositories {
                   google()
                   mavenCentral()
@@ -148,14 +136,14 @@ jobs:
 
           rootProject.name = "HtmlToApk"
           include ":app"
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (root / "build.gradle").write_text("""plugins {
+          (root / "build.gradle").write_text('''plugins {
               id "com.android.application" version "8.7.3" apply false
           }
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (root / "app/build.gradle").write_text("""plugins {
+          (root / "app/build.gradle").write_text('''plugins {
               id "com.android.application"
           }
 
@@ -171,14 +159,14 @@ jobs:
                   versionName "1.0"
               }
           }
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (values_dir / "strings.xml").write_text(f"""<resources>
+          (values_dir / "strings.xml").write_text(f'''<resources>
               <string name="app_name">{escape(app_name)}</string>
           </resources>
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (values_dir / "styles.xml").write_text("""<resources>
+          (values_dir / "styles.xml").write_text('''<resources>
               <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
                   <item name="android:windowNoTitle">true</item>
                   <item name="android:windowActionBar">false</item>
@@ -187,9 +175,9 @@ jobs:
                   <item name="android:navigationBarColor">#050202</item>
               </style>
           </resources>
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (drawable_dir / "ic_launcher.xml").write_text("""<vector xmlns:android="http://schemas.android.com/apk/res/android"
+          (drawable_dir / "ic_launcher.xml").write_text('''<vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="108dp"
               android:height="108dp"
               android:viewportWidth="108"
@@ -201,11 +189,10 @@ jobs:
               <path android:fillColor="#d8a549" android:pathData="M51,42h6v24h-6z"/>
               <path android:fillColor="#d8a549" android:pathData="M42,51h24v6h-24z"/>
           </vector>
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (root / "app/src/main/AndroidManifest.xml").write_text("""<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          (root / "app/src/main/AndroidManifest.xml").write_text('''<manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
-
               <application
                   android:theme="@style/AppTheme"
                   android:label="@string/app_name"
@@ -214,23 +201,20 @@ jobs:
                   android:resizeableActivity="true"
                   android:allowBackup="true"
                   android:supportsRtl="true">
-
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
                       android:screenOrientation="portrait">
-
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
-
                   </activity>
               </application>
           </manifest>
-          """, encoding="utf-8")
+          ''', encoding="utf-8")
 
-          (java_dir / "MainActivity.java").write_text("""package com.orueu.htmlapk;
+          (java_dir / "MainActivity.java").write_text('''package com.orueu.htmlapk;
 
           import android.app.Activity;
           import android.os.Bundle;
@@ -253,7 +237,6 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-
                   requestWindowFeature(Window.FEATURE_NO_TITLE);
                   getWindow().setStatusBarColor(android.graphics.Color.parseColor("#050202"));
                   getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#050202"));
@@ -281,31 +264,21 @@ jobs:
                   webView.setVerticalScrollBarEnabled(true);
                   webView.setHorizontalScrollBarEnabled(false);
                   webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
-
                   webView.setWebViewClient(new WebViewClient());
-
                   webView.setWebChromeClient(new WebChromeClient() {
                       @Override
-                      public boolean onShowFileChooser(
-                              WebView webView,
-                              ValueCallback<Uri[]> filePathCallback,
-                              FileChooserParams fileChooserParams
-                      ) {
+                      public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                           if (MainActivity.this.filePathCallback != null) {
                               MainActivity.this.filePathCallback.onReceiveValue(null);
                           }
-
                           MainActivity.this.filePathCallback = filePathCallback;
-
                           Intent intent = fileChooserParams.createIntent();
-
                           try {
                               startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
                           } catch (Exception e) {
                               MainActivity.this.filePathCallback = null;
                               return false;
                           }
-
                           return true;
                       }
                   });
@@ -321,21 +294,17 @@ jobs:
                           super.onActivityResult(requestCode, resultCode, data);
                           return;
                       }
-
                       Uri[] results = null;
-
                       if (resultCode == RESULT_OK && data != null) {
                           Uri dataUri = data.getData();
                           if (dataUri != null) {
                               results = new Uri[]{dataUri};
                           }
                       }
-
                       filePathCallback.onReceiveValue(results);
                       filePathCallback = null;
                       return;
                   }
-
                   super.onActivityResult(requestCode, resultCode, data);
               }
 
@@ -348,28 +317,18 @@ jobs:
                   }
               }
           }
-          """, encoding="utf-8")
-
+          ''', encoding="utf-8")
           print("Projeto Android criado com sucesso.")
           PY
 
       - name: Gerar APK
+        shell: bash
         run: |
           cd android_build
           gradle :app:assembleDebug --no-daemon --stacktrace
-
-      - name: Encontrar APK
-        run: |
-          APK_PATH=$(find android_build/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
-          if [ -z "$APK_PATH" ]; then
-            echo "ERRO: APK não encontrado."
-            find android_build -path "*/build/outputs/*" -type f || true
-            exit 1
-          fi
-          cp "$APK_PATH" central-player-debug.apk
 
       - name: Enviar APK
         uses: actions/upload-artifact@v4
         with:
           name: central-player-apk
-          path: central-player-debug.apk
+          path: android_build/app/build/outputs/apk/debug/*.apk
